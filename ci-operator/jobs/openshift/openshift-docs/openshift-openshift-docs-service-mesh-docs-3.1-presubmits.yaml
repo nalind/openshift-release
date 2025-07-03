@@ -1,24 +1,27 @@
-postsubmits:
-  stolostron/mtv-integrations:
+presubmits:
+  openshift/openshift-docs:
   - agent: kubernetes
     always_run: true
     branches:
-    - ^main$
-    cluster: build01
+    - ^service-mesh-docs-3\.1$
+    - ^service-mesh-docs-3\.1-
+    cluster: build05
+    context: ci/prow/validate-asciidoc
     decorate: true
     decoration_config:
       skip_cloning: true
     labels:
       ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-stolostron-mtv-integrations-main-fast-forward
+      pj-rehearse.openshift.io/can-be-rehearsed: "true"
+    name: pull-ci-openshift-openshift-docs-service-mesh-docs-3.1-validate-asciidoc
+    rerun_command: /test validate-asciidoc
     spec:
       containers:
       - args:
         - --gcs-upload-secret=/secrets/gcs/service-account.json
         - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
         - --report-credentials-file=/etc/report/credentials
-        - --target=fast-forward
+        - --target=validate-asciidoc
         command:
         - ci-operator
         image: ci-operator:latest
@@ -51,25 +54,29 @@ postsubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
+    trigger: (?m)^/test( | .* )validate-asciidoc,?($|\s.*)
   - agent: kubernetes
     always_run: true
     branches:
-    - ^main$
-    cluster: build01
+    - ^service-mesh-docs-3\.1$
+    - ^service-mesh-docs-3\.1-
+    cluster: build05
+    context: ci/prow/validate-portal
     decorate: true
     decoration_config:
       skip_cloning: true
     labels:
       ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-stolostron-mtv-integrations-main-pr-merge-image-mirror
+      pj-rehearse.openshift.io/can-be-rehearsed: "true"
+    name: pull-ci-openshift-openshift-docs-service-mesh-docs-3.1-validate-portal
+    rerun_command: /test validate-portal
     spec:
       containers:
       - args:
         - --gcs-upload-secret=/secrets/gcs/service-account.json
         - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
         - --report-credentials-file=/etc/report/credentials
-        - --target=pr-merge-image-mirror
+        - --target=validate-portal
         command:
         - ci-operator
         image: ci-operator:latest
@@ -102,61 +109,4 @@ postsubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
-  - agent: kubernetes
-    always_run: true
-    branches:
-    - ^main$
-    cluster: build01
-    decorate: true
-    decoration_config:
-      skip_cloning: true
-    labels:
-      ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-stolostron-mtv-integrations-main-sonar-post-submit
-    spec:
-      containers:
-      - args:
-        - --gcs-upload-secret=/secrets/gcs/service-account.json
-        - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
-        - --report-credentials-file=/etc/report/credentials
-        - --secret-dir=/secrets/acm-sonarcloud-token
-        - --target=sonar-post-submit
-        command:
-        - ci-operator
-        image: ci-operator:latest
-        imagePullPolicy: Always
-        name: ""
-        resources:
-          requests:
-            cpu: 10m
-        volumeMounts:
-        - mountPath: /secrets/acm-sonarcloud-token
-          name: acm-sonarcloud-token
-          readOnly: true
-        - mountPath: /secrets/gcs
-          name: gcs-credentials
-          readOnly: true
-        - mountPath: /secrets/manifest-tool
-          name: manifest-tool-local-pusher
-          readOnly: true
-        - mountPath: /etc/pull-secret
-          name: pull-secret
-          readOnly: true
-        - mountPath: /etc/report
-          name: result-aggregator
-          readOnly: true
-      serviceAccountName: ci-operator
-      volumes:
-      - name: acm-sonarcloud-token
-        secret:
-          secretName: acm-sonarcloud-token
-      - name: manifest-tool-local-pusher
-        secret:
-          secretName: manifest-tool-local-pusher
-      - name: pull-secret
-        secret:
-          secretName: registry-pull-credentials
-      - name: result-aggregator
-        secret:
-          secretName: result-aggregator
+    trigger: (?m)^/test( | .* )validate-portal,?($|\s.*)
